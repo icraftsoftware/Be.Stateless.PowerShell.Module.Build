@@ -32,16 +32,20 @@
     AliasesToExport       = @()
     CmdletsToExport       = @()
     FunctionsToExport     = @(
+        # Assembly.ps1
+        'Get-ReferencedAssembly',
         # NuGet.ps1
         'Find-NuGetPackageReference',
         'Update-NuGetPackageReference',
-        # Utils.ps1
-        'Clear-Project'
+        # Project.ps1
+        'Clear-Project',
+        'Get-ProjectAssembly',
+        'Get-ProjectReference'
     )
     VariablesToExport     = @()
     PrivateData           = @{
         PSData = @{
-            Tags       = @('NuGet', 'dotnet', 'build')
+            Tags       = @('be.stateless.be', 'icraftsoftware', 'NuGet', 'dotnet', 'build')
             LicenseUri = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx/blob/master/LICENSE'
             ProjectUri = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx'
             # ReleaseNotes = ''
