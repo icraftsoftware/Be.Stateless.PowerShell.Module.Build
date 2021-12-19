@@ -27,13 +27,21 @@
     ProcessorArchitecture = 'None'
     PowerShellVersion     = '5.0'
     NestedModules         = @()
-    RequiredModules       = @()
+    RequiredModules       = @(
+        @{ ModuleName = 'posh-git'; ModuleVersion = '1.0.0'; GUID = '74c9fd30-734b-4c89-a8ae-7727ad21d1d5' }
+    )
 
-    AliasesToExport       = @()
+    AliasesToExport       = @(
+        # Git.ps1
+        'grs'
+    )
     CmdletsToExport       = @()
     FunctionsToExport     = @(
         # Assembly.ps1
         'Get-ReferencedAssembly',
+        # Git.ps1
+        'Test-GitRepository',
+        'Write-GitRepositoryStatus',
         # NuGet.ps1
         'Find-NuGetPackageReference',
         'Update-NuGetPackageReference',

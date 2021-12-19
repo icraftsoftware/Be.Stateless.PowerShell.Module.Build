@@ -19,5 +19,6 @@
 Set-StrictMode -Version Latest
 
 . $PSScriptRoot\Assembly\Assembly.ps1
+. $PSScriptRoot\Git\Git.ps1
 . $PSScriptRoot\NuGet\NuGet.ps1
 . $PSScriptRoot\Project\Project.ps1
