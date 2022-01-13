@@ -1,6 +1,6 @@
 ﻿#region Copyright & License
 
-# Copyright © 2020 - 2021 François Chabot
+# Copyright © 2020 - 2022 François Chabot
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,27 +19,27 @@
 Set-StrictMode -Version Latest
 
 function Get-ReferencedAssembly {
-    [CmdletBinding()]
-    [OutputType([PSCustomObject[]])]
-    param(
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [ValidateScript({ $_ | Test-Path })]
-        [string[]]
-        $Path
-    )
-    process {
-        $Path | Resolve-Path -PipelineVariable currentPath | ForEach-Object {
-            Write-Progress -Activity 'Loading Assembly' -Status $currentPath
-            try {
-                [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($currentPath).GetReferencedAssemblies() | Add-Member -PassThru `
-                    -Name PublicKeyToken `
-                    -MemberType ScriptProperty `
-                    -Value { ($this.GetPublicKeyToken() | ForEach-Object -MemberName ToString -ArgumentList x2) -join '' } # https://stackoverflow.com/a/46301868/1789441
-                # would use https://docs.microsoft.com/en-us/dotnet/api/system.convert.tohexstring in .NET 5.0 onwards
-            } catch {
-                Write-Error $_
-            }
-        }
-    }
+   [CmdletBinding()]
+   [OutputType([PSCustomObject[]])]
+   param(
+      [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [ValidateScript({ $_ | Test-Path -PathType Leaf })]
+      [string[]]
+      $Path
+   )
+   process {
+      $Path | Resolve-Path -PipelineVariable currentPath | ForEach-Object {
+         Write-Progress -Activity 'Loading Assembly' -Status $currentPath
+         try {
+            [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($currentPath).GetReferencedAssemblies() | Add-Member -PassThru `
+               -Name PublicKeyToken `
+               -MemberType ScriptProperty `
+               <# https://stackoverflow.com/a/46301868/1789441, would use https://docs.microsoft.com/en-us/dotnet/api/system.convert.tohexstring in .NET 5.0 onwards #> `
+               -Value { ($this.GetPublicKeyToken() | ForEach-Object -MemberName ToString -ArgumentList x2) -join '' }
+         } catch {
+            Write-Error $_
+         }
+      }
+   }
 }

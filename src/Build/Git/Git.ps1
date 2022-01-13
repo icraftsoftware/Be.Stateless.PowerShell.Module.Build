@@ -1,6 +1,6 @@
 ﻿#region Copyright & License
 
-# Copyright © 2019 - 2021 François Chabot
+# Copyright © 2019 - 2022 François Chabot
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,40 +19,40 @@
 Set-StrictMode -Version Latest
 
 function Test-GitRepository {
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [PSObject[]]
-        $Path
-    )
-    process {
-        $Path | ForEach-Object -Process { $_ | Push-Location ; [bool](Get-GitDirectory); Pop-Location }
-    }
+   [CmdletBinding()]
+   [OutputType([bool])]
+   param(
+      [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [PSObject[]]
+      $Path = (Get-Location)
+   )
+   process {
+      $Path | ForEach-Object -Process { $_ | Push-Location ; [bool](Get-GitDirectory); Pop-Location }
+   }
 }
 
 function Write-GitRepositoryStatus {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [PSObject]
-        $Path = (Get-Location)
-    )
-    process {
-        $Path | Get-ChildItem -Directory | ForEach-Object -Process {
-            $_ | Resolve-Path -Relative | Write-Verbose
-            $_ | Push-Location
-            if ([bool](Get-GitDirectory)) {
-                "$(Write-VcsStatus)$($_.Name)"
-            } else {
-                Write-GitRepositoryStatus
-            }
-            Pop-Location
-        }
-    }
+   [CmdletBinding()]
+   [OutputType([void])]
+   param(
+      [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [PSObject]
+      $Path = (Get-Location)
+   )
+   process {
+      $Path | Get-ChildItem -Directory | ForEach-Object -Process {
+         $_ | Resolve-Path -Relative | Write-Verbose
+         $_ | Push-Location
+         if ([bool](Get-GitDirectory)) {
+            "$(Write-VcsStatus)$($_.Name)"
+         } else {
+            Write-GitRepositoryStatus
+         }
+         Pop-Location
+      }
+   }
 }
 
-Set-Alias -Name grs -Value Write-GitRepositoryStatus
+Set-Alias -Option ReadOnly -Name grs -Value Write-GitRepositoryStatus
