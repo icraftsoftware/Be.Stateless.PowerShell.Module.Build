@@ -19,6 +19,14 @@
 Set-StrictMode -Version Latest
 
 . $PSScriptRoot\Assembly\Assembly.ps1
+. $PSScriptRoot\BatchFile\BatchFile.ps1
+. $PSScriptRoot\EnvironmentFrame\EnvironmentFrame.ps1
 . $PSScriptRoot\Git\Git.ps1
 . $PSScriptRoot\NuGet\NuGet.ps1
 . $PSScriptRoot\Project\Project.ps1
+. $PSScriptRoot\VisualStudioEnvironment\VisualStudioEnvironment.ps1
+
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+   $script:environmentFrames.Clear()
+   $script:visualStudioInfo = $null
+}

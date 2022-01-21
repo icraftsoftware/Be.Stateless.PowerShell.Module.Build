@@ -18,7 +18,7 @@
 
 @{
    RootModule            = 'Build.psm1'
-   ModuleVersion         = '1.0.0.0'
+   ModuleVersion         = '1.1.0.0'
    GUID                  = 'a6648290-dd23-4586-aa73-cce54dc3fd07'
    Author                = 'François Chabot'
    CompanyName           = 'be.stateless'
@@ -29,16 +29,22 @@
    NestedModules         = @()
    RequiredModules       = @(
       @{ ModuleName = 'posh-git' ; ModuleVersion = '1.0.0' ; GUID = '74c9fd30-734b-4c89-a8ae-7727ad21d1d5' }
+      @{ ModuleName = 'Psx' ; ModuleVersion = '2.1.0.0' ; GUID = '217de01f-f2e1-460a-99a4-b8895d0dd071' }
+      @{ ModuleName = 'VSSetup' ; ModuleVersion = '2.2.16' ; GUID = '440e8fb1-19c4-4d39-8f75-37424bc4265a' }
    )
 
    AliasesToExport       = @(
       # Git.ps1
-      'grs'
+      'grs',
+      # VisualStudioEnvironment.ps1
+      'evs'
    )
    CmdletsToExport       = @()
    FunctionsToExport     = @(
       # Assembly.ps1
       'Get-ReferencedAssembly',
+      # BatchFile.ps1
+      'Invoke-BatchFile',
       # Git.ps1
       'Test-GitRepository',
       'Write-GitRepositoryStatus',
@@ -48,12 +54,18 @@
       # Project.ps1
       'Clear-Project',
       'Get-ProjectAssembly',
-      'Get-ProjectReference'
+      'Get-ProjectReference',
+      # VisualStudioEnvironment.ps1
+      'Assert-VisualStudioEnvironment',
+      'Enter-VisualStudioEnvironment',
+      'Exit-VisualStudioEnvironment',
+      'Get-VisualStudioEnvironment',
+      'Test-VisualStudioEnvironment'
    )
    VariablesToExport     = @()
    PrivateData           = @{
       PSData = @{
-         Tags       = @('be.stateless.be', 'icraftsoftware', 'NuGet', 'dotnet', 'build')
+         Tags       = @('be.stateless.be', 'icraftsoftware', 'NuGet', 'dotnet', 'build', 'Visual Studio')
          LicenseUri = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx/blob/master/LICENSE'
          ProjectUri = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx'
          # ReleaseNotes = ''

@@ -28,11 +28,11 @@ Set-StrictMode -Version Latest
    always try to clear the *.btm.cs, *.btp.cs, and *.xsd.cs files that are produced by the BizTalk compiler.
 .PARAMETER Path
    The path to the Visual Studio project to clean. It defaults to the current directory.
-.PARAMETER UserFiles
-   Whether to recursively clean the *.suo and *.user files underneath Path.
 .PARAMETER Recurse
    Whether to recursively clean the Visual studio project folders underneath Path. You typically use this switch
    when the current folder is the solution folder and you want to clean all the projects underneath.
+.PARAMETER SkipUserFile
+   Whether to skip recursively cleaning the *.suo and *.user files underneath Path.
 .EXAMPLE
    Get-ChildItem -Directory | Clear-Project
 .EXAMPLE
@@ -48,7 +48,7 @@ Set-StrictMode -Version Latest
 .EXAMPLE
    (gi .\BizTalk.Dsl), (gi .\BizTalk.Dsl.Tests) | Clear-Project -WhatIf
 .NOTES
-   © 2021 be.stateless.
+   © 2022 be.stateless.
 #>
 function Clear-Project {
    [CmdletBinding(SupportsShouldProcess = $true)]
@@ -58,13 +58,13 @@ function Clear-Project {
       [PSObject[]]
       $Path,
 
-      [Parameter(Mandatory = $false, HelpMessage = 'Clean *.user, *.suo files.')]
-      [switch]
-      $UserFiles,
-
       [Parameter(Mandatory = $false)]
       [switch]
-      $Recurse
+      $Recurse,
+
+      [Parameter(Mandatory = $false, HelpMessage = 'Clean *.user, *.suo files.')]
+      [switch]
+      $SkipUserFiles
    )
    process {
       $Path = if ($null -eq $Path) { Get-Item -Path . } else { Get-Item -Path $Path }
@@ -83,7 +83,7 @@ function Clear-Project {
             Write-Progress -Activity 'Clearing BizTalk generated files' -Status ("$($_.FullName).cs" | Resolve-Path -Relative)
             Remove-Item -LiteralPath "$($_.FullName).cs" -Confirm:$false -Force
          }
-      if ($UserFiles) {
+      if (-not $SkipUserFiles) {
          Get-ChildItem -Path $Path -Filter *.* -Include *.user, *.suo -Recurse | ForEach-Object {
             Write-Progress -Activity 'Clearing user files' -Status ($_ | Resolve-Path -Relative)
             $_ | Remove-Item -Confirm:$false
