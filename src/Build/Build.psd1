@@ -35,7 +35,8 @@
 
    AliasesToExport       = @(
       # Git.ps1
-      'grs',
+      'ggrs',
+      'wgrs',
       # VisualStudioEnvironment.ps1
       'evs'
    )
@@ -46,6 +47,7 @@
       # BatchFile.ps1
       'Invoke-BatchFile',
       # Git.ps1
+      'Get-GitRepositoryStatus',
       'Test-GitRepository',
       'Write-GitRepositoryStatus',
       # NuGet.ps1

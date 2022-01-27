@@ -17,6 +17,37 @@
 #endregion
 
 Set-StrictMode -Version Latest
+<#
+.SYNOPSIS
+   Short description
+.DESCRIPTION
+   Long description
+.PARAMETER Path
+   Parameter description
+.OUTPUTS
+   ...
+.EXAMPLE
+   PS> Get-ChildItem -Directory | Where-Object -FilterScript { Get-GitRepositoryStatus -Path $_ | Select-Object -ExpandProperty HasWorking }
+.NOTES
+   © 2022 be.stateless.
+#>
+function Get-GitRepositoryStatus {
+   [CmdletBinding()]
+   [OutputType([PSObject[]])]
+   param(
+      [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [PSObject[]]
+      $Path = (Get-Location)
+   )
+   process {
+      $Path | ForEach-Object -Process {
+         Push-Location -Path $_
+         if ([bool](Get-GitDirectory)) { Get-GitStatus }
+         Pop-Location
+      }
+   }
+}
 
 function Test-GitRepository {
    [CmdletBinding()]
@@ -28,7 +59,7 @@ function Test-GitRepository {
       $Path = (Get-Location)
    )
    process {
-      $Path | ForEach-Object -Process { $_ | Push-Location ; [bool](Get-GitDirectory); Pop-Location }
+      $Path | ForEach-Object -Process { Push-Location -Path $_ ; [bool](Get-GitDirectory); Pop-Location }
    }
 }
 
@@ -38,21 +69,25 @@ function Write-GitRepositoryStatus {
    param(
       [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
       [ValidateNotNullOrEmpty()]
-      [PSObject]
-      $Path = (Get-Location)
+      [PSObject[]]
+      $Path = (Get-Location),
+
+      [Parameter(Mandatory = $false)]
+      [switch]
+      $Recurse
    )
    process {
-      $Path | Get-ChildItem -Directory | ForEach-Object -Process {
-         $_ | Resolve-Path -Relative | Write-Verbose
-         $_ | Push-Location
+      $Path | ForEach-Object -Process {
+         Push-Location -Path $_
          if ([bool](Get-GitDirectory)) {
-            "$(Write-VcsStatus)$($_.Name)"
-         } else {
-            Write-GitRepositoryStatus
+            Write-Host "$(Write-VcsStatus) $($_.Name)"
+         } elseif ($Recurse) {
+            Get-ChildItem -Path . -Directory | Write-GitRepositoryStatus -Recurse
          }
          Pop-Location
       }
    }
 }
 
-Set-Alias -Option ReadOnly -Name grs -Value Write-GitRepositoryStatus
+Set-Alias -Option ReadOnly -Name ggrs -Value Get-GitRepositoryStatus
+Set-Alias -Option ReadOnly -Name wgrs -Value Write-GitRepositoryStatus
