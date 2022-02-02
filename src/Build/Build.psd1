@@ -44,8 +44,6 @@
    FunctionsToExport     = @(
       # Assembly.ps1
       'Get-ReferencedAssembly',
-      # BatchFile.ps1
-      'Invoke-BatchFile',
       # Git.ps1
       'Get-GitRepositoryStatus',
       'Test-GitRepository',
@@ -58,11 +56,8 @@
       'Get-ProjectAssembly',
       'Get-ProjectReference',
       # VisualStudioEnvironment.ps1
-      'Assert-VisualStudioEnvironment',
       'Enter-VisualStudioEnvironment',
-      'Exit-VisualStudioEnvironment',
-      'Get-VisualStudioEnvironment',
-      'Test-VisualStudioEnvironment'
+      'Exit-VisualStudioEnvironment'
    )
    VariablesToExport     = @()
    PrivateData           = @{

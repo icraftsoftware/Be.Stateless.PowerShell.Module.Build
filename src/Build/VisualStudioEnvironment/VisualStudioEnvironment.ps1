@@ -20,172 +20,77 @@ Set-StrictMode -Version Latest
 
 <#
 .SYNOPSIS
-   Throws when the environment variables have not been setup for a given version of Visual Studio.
+   Sets up the environment variables for a given version of Visual Studio.
 .DESCRIPTION
-   This command will throw if the environment variables have not been setup for a given version of Visual Studio and
-   will silently complete otherwise.
-.EXAMPLE
-   PS> Assert-VisualStudioEnvironment
-.EXAMPLE
-   PS> Assert-VisualStudioEnvironment -Version 2019
-.NOTES
-   © 2022 be.stateless.
-#>
-function Assert-VisualStudioEnvironment {
-   [CmdletBinding()]
-   [OutputType([void])]
-   param(
-      [Parameter(Position = 0, Mandatory = $false)]
-      [string]
-      $Version = '\d{4}'
-   )
-
-   if (-not (Test-VisualStudioEnvironment -Version $Version)) {
-      if ($PSBoundParameters.ContainsKey('Version')) {
-         throw "Environment variables have not been setup for Visual Studio $Version."
-      } else {
-         throw 'Environment variables have not been setup for Visual Studio.'
-      }
-   }
-}
-
-<#
-.SYNOPSIS
-   Sets up the environment variables for a version of Visual Studio.
-.DESCRIPTION
-   Sets up the environment variables for a version of Visual Studio.
+   Sets up the environment variables in order to work with the tools coming with a given version of Visual Studio. It
+   only works with Visual Studio 2017 upwards.
 .PARAMETER Version
-   The version of Visual Studio for which to setup the environment.
+   The version of Visual Studio for which to setup the environment. It defaults to the latest version if none is given.
+.EXAMPLE
+   PS> Enter-VisualStudioEnvironment
 .EXAMPLE
    PS> Enter-VisualStudioEnvironment 2017
-.EXAMPLE
-   PS> Enter-VisualStudioEnvironment 2022 -WhatIf
+.NOTES
+   https://github.com/microsoft/vswhere/wiki/Start-Developer-Command-Prompt
 .NOTES
    © 2022 be.stateless.
 #>
 function Enter-VisualStudioEnvironment {
-   [CmdletBinding(SupportsShouldProcess = $true)]
+   [CmdletBinding()]
    [OutputType([void])]
    param(
       [Parameter(Position = 0, Mandatory = $false)]
       [string]
-      $Version = (Get-VisualStudioInfo | ForEach-Object Version | Sort-Object -Descending | Select-Object -First 1),
-
-      [Parameter(Mandatory = $false)]
-      [switch]
-      $Force
+      $Version = (Get-VSSetupInstance | Select-VSSetupInstance -Latest).CatalogInfo['ProductLineVersion']
    )
 
-   $frameName = $frameNameFormat -f $Version
-   if (($Force -or -not (Test-VisualStudioEnvironment -Version $Version)) -and $PsCmdlet.ShouldProcess('Environment Variables', "Tool up for $frameName")) {
-      Pop-EnvironmentFrame
-      if ($Force -or -not (Test-EnvironmentFrame -Name $frameName)) {
-         Add-EnvironmentFrame `
-            -Name $frameName `
-            -Frame (Invoke-BatchFile -Path (Get-VisualStudioInfo | Where-Object Version -EQ $Version | Select-Object -ExpandProperty DevCmdPath))
-      }
-      Push-EnvironmentFrame -Name $frameName
-      Write-Host -Object "$frameName Developer Command Prompt has been entered."
+   $installationPath = Get-VSSetupInstance |
+      Where-Object -FilterScript { $_.CatalogInfo['ProductLineVersion'] -eq $Version } |
+      Select-Object -ExpandProperty InstallationPath
+   $batchPath = Join-Path -Path $installationPath -ChildPath 'Common7\Tools\VsDevCmd.bat' | Resolve-Path
+   & "${env:COMSPEC}" /s /c "`"$batchPath`" -no_logo && set" | ForEach-Object {
+      $name, $value = $_ -split '=', 2
+      Write-Verbose -Message "Updating environment variable $name"
+      Set-Content -Path env:\"$name" -Value $value
    }
+   Write-Information -MessageData "Entered Visual Studio $Version Developer Command Prompt."
 }
 
 <#
 .SYNOPSIS
-   Clears the environment variables that have been set up for a version of Visual Studio.
+   Clears the environment variables that have been set up for Visual Studio.
 .DESCRIPTION
-   Clears the environment variables that have been set up for a version of Visual Studio and restore them to what they
-   were before entering the environment setup for Visual Studio.
+   Clears the environment variables that have been set up for any version of Visual Studio and restore them to their
+   default, i.e. what they are when launching a regular command prompt.
 .EXAMPLE
    PS> Exit-VisualStudioEnvironment
-.EXAMPLE
-   PS> Exit-VisualStudioEnvironment -Version 2022
 .NOTES
    © 2022 be.stateless.
 #>
 function Exit-VisualStudioEnvironment {
-   [CmdletBinding(SupportsShouldProcess = $true)]
+   [CmdletBinding()]
    [OutputType([void])]
-   param(
-      [Parameter(Position = 0, Mandatory = $false)]
-      [string]
-      $Version = '\d{4}'
-   )
-
-   if ((Test-VisualStudioEnvironment -Version $Version) -and $PsCmdlet.ShouldProcess('Environment Variables', "Tool down from $(Get-EnvironmentFrame)")) {
-      Pop-EnvironmentFrame
-      Write-Host -Object "$frameName Developer Command Prompt has been exited."
-   }
-}
-
-<#
-.SYNOPSIS
-   Returns the version of Visual Studio for which the environment variables have been setup.
-.DESCRIPTION
-   Returns the version of Visual Studio for which the environment variables have been setup.
-.EXAMPLE
-   PS> Get-VisualStudioEnvironment
-.NOTES
-   © 2022 be.stateless.
-#>
-function Get-VisualStudioEnvironment {
-   [CmdletBinding()]
-   [OutputType([string])]
    param()
-   if ((Get-EnvironmentFrame) -match ($frameNameFormat -f '(\d{4})')) { $Matches[1] }
-}
 
-<#
-.SYNOPSIS
-   Returns whether environment variables have been setup for a given version of Visual Studio.
-.DESCRIPTION
-   This command will return $true if the environment variables have been setup for a given version of Visual Studio
-   and $false otherwise.
-.EXAMPLE
-   PS> Test-VisualStudioEnvironment
-.EXAMPLE
-   PS> Test-VisualStudioEnvironment -Version 2019
-.NOTES
-   © 2022 be.stateless.
-#>
-function Test-VisualStudioEnvironment {
-   [CmdletBinding()]
-   [OutputType([bool])]
-   param(
-      [Parameter(Position = 0, Mandatory = $false)]
-      [string]
-      $Version = '\d{4}'
-   )
-   (Get-EnvironmentFrame) -match ($frameNameFormat -f $Version)
-}
-
-function Get-VisualStudioInfo {
-   [CmdletBinding()]
-   [OutputType([PSCustomObject[]])]
-   param(
-      [Parameter(Mandatory = $false)]
-      [ValidateNotNullOrEmpty()]
-      [string]
-      $Version
-   )
-   if ($null -eq $script:visualStudioInfo) {
-      $script:visualStudioInfo = @(
-         Get-VSSetupInstance | ForEach-Object -Process {
-            [PSCustomObject]@{
-               Version    = $_.CatalogInfo['ProductLineVersion']
-               DevCmdPath = Join-Path -Path $_.InstallationPath -ChildPath 'Common7\Tools\VsDevCmd.bat' | Resolve-Path
-            }
-         }
-      )
+   $fromEnvironmentBlock = [System.Environment]::GetEnvironmentVariables()
+   $script:defaultEnvironmentBlock.Keys | ForEach-Object -Process {
+      Write-Verbose -Message "Updating environment variable $_"
+      Set-Item -Path Env:$_ -Value $script:defaultEnvironmentBlock.$_
    }
-   $script:visualStudioInfo
+   $fromEnvironmentBlock.Keys | Where-Object -FilterScript { $_ -NotIn $script:defaultEnvironmentBlock.Keys } | ForEach-Object -Process {
+      Write-Verbose -Message "Removing environment variable $_"
+      Remove-Item -Path Env:$_
+   }
+   Write-Information -MessageData 'Exited Visual Studio Developer Command Prompt.'
 }
 
-Register-ArgumentCompleter -CommandName Assert-VisualStudioEnvironment, Enter-VisualStudioEnvironment, Exit-VisualStudioEnvironment, Test-VisualStudioEnvironment -ParameterName Version -ScriptBlock {
+Register-ArgumentCompleter -CommandName Enter-VisualStudioEnvironment -ParameterName Version -ScriptBlock {
    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-   Get-VisualStudioInfo | Where-Object Version -Like "$wordToComplete*" | ForEach-Object Version
+   Get-VSSetupInstance | ForEach-Object -Process { $_.CatalogInfo['ProductLineVersion'] } | Where-Object { $_ -like "$wordToComplete*" }
 }
 
 Set-Alias -Option ReadOnly -Name evs -Value Enter-VisualStudioEnvironment
 
-$script:frameNameFormat = 'Visual Studio {0}'
-$script:visualStudioInfo = $null
+if (-not(Get-Variable -Name defaultEnvironmentBlock -Scope Script -ErrorAction SilentlyContinue)) {
+   $script:defaultEnvironmentBlock = [System.Environment]::GetEnvironmentVariables()
+}
