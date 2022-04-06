@@ -49,6 +49,80 @@ function Get-GitRepositoryStatus {
    }
 }
 
+function Reset-GitSubModule {
+   [CmdletBinding()]
+   [OutputType([bool])]
+   param(
+      [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [PSObject[]]
+      $Path = (Get-Location),
+
+      [Parameter(Mandatory = $false)]
+      [ValidateNotNullOrEmpty()]
+      [string[]]
+      $Name
+   )
+   process {
+      $Path | ForEach-Object -Process {
+         Push-Location -Path $_
+         if ([bool](Get-GitDirectory)) {
+            if ($Name | Test-None) {
+               git submodule foreach @'
+git fetch origin
+git checkout master
+git reset --hard origin/master
+'@
+            } else {
+               git submodule --quiet foreach 'echo $name:$sm_path' | Select-String -Pattern '^(?<name>.+):(?<path>.+)$' | Where-Object -FilterScript { $_.Matches[0].Groups['name'].Value -in $Name } | ForEach-Object -Process {
+                  Write-Host "Entering '$($_.Matches[0].Groups['name'].Value)'"
+                  Push-Location -Path $_.Matches[0].Groups['path'].Value
+                  git fetch origin
+                  git checkout master
+                  git reset --hard origin/master
+                  Pop-Location
+               }
+            }
+         }
+      }
+      Pop-Location
+   }
+}
+
+function Update-GitSubModule {
+   [CmdletBinding()]
+   [OutputType([bool])]
+   param(
+      [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+      [ValidateNotNullOrEmpty()]
+      [PSObject[]]
+      $Path = (Get-Location),
+
+      [Parameter(Mandatory = $false)]
+      [ValidateNotNullOrEmpty()]
+      [string[]]
+      $Name
+   )
+   process {
+      $Path | ForEach-Object -Process {
+         Push-Location -Path $_
+         if ([bool](Get-GitDirectory)) {
+            if ($Name | Test-None) {
+               git submodule foreach git pull origin master
+            } else {
+               git submodule --quiet foreach 'echo $name:$sm_path' | Select-String -Pattern '^(?<name>.+):(?<path>.+)$' | Where-Object -FilterScript { $_.Matches[0].Groups['name'].Value -in $Name } | ForEach-Object -Process {
+                  Write-Host "Entering '$($_.Matches[0].Groups['name'].Value)'"
+                  Push-Location -Path $_.Matches[0].Groups['path'].Value
+                  git pull origin master
+                  Pop-Location
+               }
+            }
+         }
+      }
+      Pop-Location
+   }
+}
+
 function Test-GitRepository {
    [CmdletBinding()]
    [OutputType([bool])]
@@ -90,4 +164,6 @@ function Write-GitRepositoryStatus {
 }
 
 Set-Alias -Option ReadOnly -Name ggrs -Value Get-GitRepositoryStatus
+Set-Alias -Option ReadOnly -Name rgsm -Value Reset-GitSubModule
+Set-Alias -Option ReadOnly -Name ugsm -Value Update-GitSubModule
 Set-Alias -Option ReadOnly -Name wgrs -Value Write-GitRepositoryStatus

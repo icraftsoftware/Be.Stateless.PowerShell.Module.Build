@@ -36,6 +36,8 @@
    AliasesToExport       = @(
       # Git.ps1
       'ggrs',
+      'rgsm',
+      'ugsm',
       'wgrs',
       # VisualStudioEnvironment.ps1
       'evs'
@@ -46,6 +48,8 @@
       'Get-ReferencedAssembly',
       # Git.ps1
       'Get-GitRepositoryStatus',
+      'Reset-GitSubModule',
+      'Update-GitSubModule',
       'Test-GitRepository',
       'Write-GitRepositoryStatus',
       # NuGet.ps1
