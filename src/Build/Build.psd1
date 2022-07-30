@@ -66,9 +66,10 @@
    VariablesToExport     = @()
    PrivateData           = @{
       PSData = @{
-         Tags                       = @('be.stateless.be', 'icraftsoftware', 'NuGet', 'dotnet', 'build', 'Visual Studio')
+         Tags                       = @('be.stateless', 'icraftsoftware', 'NuGet', 'dotnet', 'build', 'Visual Studio')
          LicenseUri                 = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx/blob/master/LICENSE'
          ProjectUri                 = 'https://github.com/icraftsoftware/Be.Stateless.PowerShell.Module.Psx'
+         IconUri                    = 'https://github.com/icraftsoftware/Be.Stateless.Build.Scripts/raw/master/nuget.png'
          ExternalModuleDependencies = @('posh-git', 'Psx', 'VSSetup')
          Prerelease                 = 'preview'
       }

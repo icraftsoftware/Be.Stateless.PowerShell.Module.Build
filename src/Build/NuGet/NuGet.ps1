@@ -212,6 +212,6 @@ function Update-NuGetPackageReferenceInFile {
          Write-Host -Object '  ' -NoNewline
          Get-Item -Path $_.Path | Select-Object -ExpandProperty FullName | Resolve-Path -Relative | Write-Host
          Write-Verbose -Message "$($Name): [$($_.Matches.Groups[2].Value) -> $Version]"
-            (Get-Content -Path $_.Path) -replace $OriginalPattern, $SubstitutePattern | Set-Content -Path $_.Path -Encoding UTF8
+         (Get-Content -Path $_.Path) -replace $OriginalPattern, $SubstitutePattern | Set-Content -Path $_.Path -Encoding UTF8
       }
 }
